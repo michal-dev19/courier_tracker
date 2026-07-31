@@ -3,18 +3,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from database import get_db
+from contextlib import asynccontextmanager
 import sqlite3
-
-app = FastAPI()
-
-# mounts StaticFiles under /static/ URL for app
-app.mount("/static/", StaticFiles(directory="static"))
-
-
-# returns homepage when "/" is accessed
-@app.get("/")
-def index():
-    return FileResponse("index.html")
 
 
 # initialise the db
@@ -27,8 +17,8 @@ def init():
         users
         (id INTEGER PRIMARY KEY,
         name TEXT,
-        email TEXT,
-        password TEXT,)""")
+        email TEXT UNIQUE,
+        password TEXT)""")
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS
         shifts
@@ -36,7 +26,7 @@ def init():
         user_id INT,
         hours_worked INT,
         earned INT,
-        mileage INT,
+        mileage REAL,
         date TEXT,
         FOREIGN KEY (user_id) REFERENCES users(id))""")
         cursor.execute("""
@@ -49,8 +39,29 @@ def init():
         date TEXT,
         FOREIGN KEY (user_id) REFERENCES users(id))""")
         conn.commit()
-    except sqlite3.Error:
-        conn.rollback()
-        raise HTTPException(status_code=500, detail="Internal Server Error")
     finally:
         conn.close()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+# mounts StaticFiles under /static/ URL for app
+app.mount("/static/", StaticFiles(directory="static"))
+
+
+# returns homepage when "/" is accessed
+@app.get("/")
+def index():
+    return FileResponse("index.html")
+
+
+######## NEXT SESSION ########
+# - build auth.py, register user, login user, authorisation of user
+# - then carry on with main endpoints
