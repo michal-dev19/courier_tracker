@@ -60,7 +60,7 @@ def get_current_user(authorization: str = Header(), conn_curs=Depends(get_db)):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
-@router.post("/register")
+@router.post("/register", status_code=201)
 # function used to register a user to the database
 def register_user(user_info: CreateUser, conn_curs=Depends(get_db)):
     conn, cursor = conn_curs
