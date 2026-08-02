@@ -73,8 +73,9 @@ def register_user(user_info: CreateUser, conn_curs=Depends(get_db)):
         (?, ?)""",
             (user_info.email, hash_password(user_info.password)),
         )
+        new_id = cursor.lastrowid
         conn.commit()
-        return {"Status": "success"}
+        return {"id": new_id}
     except sqlite3.IntegrityError:
         conn.rollback()
         raise HTTPException(status_code=401, detail="Unauthorized")
