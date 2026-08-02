@@ -4,7 +4,7 @@ import os
 import datetime as dt
 from dotenv import load_dotenv
 from jose import jwt, JWTError
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 from database import get_db
 from fastapi import APIRouter, Depends, HTTPException, Header
 
@@ -20,8 +20,8 @@ ALGORITHM = "HS256"
 
 # class to receive register/login requests
 class CreateUser(BaseModel):
-    email: str
-    password: str
+    email: EmailStr
+    password: str = Field(min_length=8)
 
 
 # hash given user password for storage
