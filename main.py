@@ -3,7 +3,9 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from database import get_db
+from auth import get_current_user
 from contextlib import asynccontextmanager
+from datetime import date
 import sqlite3
 
 
@@ -24,7 +26,7 @@ def init():
         shifts
         (id INTEGER PRIMARY KEY,
         user_id INT,
-        hours_worked INT,
+        hours_worked REAL,
         earned INT,
         mileage REAL,
         date TEXT,
@@ -56,12 +58,26 @@ app = FastAPI(lifespan=lifespan)
 app.mount("/static/", StaticFiles(directory="static"))
 
 
+# class for shift creation
+class CreateShift(BaseModel):
+    hours_worked: float
+    earned: int
+    mileage: float
+    date: date
+
+
 # returns homepage when "/" is accessed
 @app.get("/")
 def index():
     return FileResponse("index.html")
 
 
-######## NEXT SESSION ########
-# - build auth.py, register user, login user, authorisation of user
-# - then carry on with main endpoints
+# creates a shift for the user
+@app.post("/shifts")
+def create_shift(
+    shift_info: CreateShift, user=Depends(get_current_user), conn_curs=Depends(get_db)
+):
+    conn, cursor = conn_curs
+    cursor.execute(
+        "INSERT INTO shifts (hours_worked, earned, mileage, date) VALUES (?), (?), (?), (?)"
+    )
