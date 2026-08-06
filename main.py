@@ -80,7 +80,7 @@ def create_shift(
     conn, cursor = conn_curs
     try:
         cursor.execute(
-            "INSERT INTO shifts (user_id, hours_worked, earned, mileage, date) VALUES (?), (?), (?), (?), (?)",
+            "INSERT INTO shifts (user_id, hours_worked, earned, mileage, date) VALUES (?, ?, ?, ?, ?)",
             (
                 user[0],
                 shift_info.hours_worked,
@@ -89,9 +89,47 @@ def create_shift(
                 shift_info.date,
             ),
         )
-        new_shift = cursor.fetchone()
+        id = cursor.lastrowid
+        if id is None:
+            raise HTTPException(status_code=404, detail="Not Found")
         conn.commit()
-        return {"new_shift": new_shift}
+        return {"shift_id": id}
     except sqlite3.Error:
         conn.rollback()
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+# view all shifts for user
+@app.get("/shifts")
+def all_user_shifts(user=Depends(get_current_user), conn_curs=Depends(get_db)):
+    conn, cursor = conn_curs
+    try:
+        cursor.execute(
+            "SELECT hours_worked, earned, mileage, date FROM shifts WHERE user_id=?",
+            (user[0],),
+        )
+        shifts = cursor.fetchall()
+        if shifts is None:
+            raise HTTPException(status_code=404, detail="Not Found")
+        return {"all_user_shifts": shifts}
+    except sqlite3.Error:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+# view specific user shift
+@app.post("/shifts/{id}")
+def user_shift(
+    shift_info: CreateShift, user=Depends(get_current_user), conn_curs=Depends(get_db)
+):
+    conn, cursor = conn_curs
+    try:
+        cursor.execute(
+            "SELECT hours_worked, earned, mileage, date FROM shifts WHERE date=? AND user_id=?",
+            (shift_info.date, user[0]),
+        )
+        shift = cursor.fetchone()
+        if shift is None:
+            raise HTTPException(status_code=404, detail="Not Found")
+        return {"shift": shift}
+    except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Internal Server Error")
