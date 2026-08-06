@@ -66,7 +66,7 @@ def register_user(user_info: CreateUser, conn_curs=Depends(get_db)):
     conn, cursor = conn_curs
     try:
         cursor.execute(
-            """INSERT INTO users (email, password) VALUES (?, ?)""",
+            "INSERT INTO users (email, password) VALUES (?, ?)",
             (user_info.email, hash_password(user_info.password)),
         )
         new_id = cursor.lastrowid
@@ -83,7 +83,7 @@ def login_user(user_info: CreateUser, conn_curs=Depends(get_db)):
     conn, cursor = conn_curs
     try:
         cursor.execute(
-            """SELECT id, email, password FROM users WHERE email=?""",
+            "SELECT id, email, password FROM users WHERE email=?",
             (user_info.email,),
         )
         credentials = cursor.fetchone()
