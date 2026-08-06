@@ -73,11 +73,25 @@ def index():
 
 
 # creates a shift for the user
-@app.post("/shifts")
+@app.post("/shifts", status_code=201)
 def create_shift(
     shift_info: CreateShift, user=Depends(get_current_user), conn_curs=Depends(get_db)
 ):
     conn, cursor = conn_curs
-    cursor.execute(
-        "INSERT INTO shifts (hours_worked, earned, mileage, date) VALUES (?), (?), (?), (?)"
-    )
+    try:
+        cursor.execute(
+            "INSERT INTO shifts (user_id, hours_worked, earned, mileage, date) VALUES (?), (?), (?), (?), (?)",
+            (
+                user[0],
+                shift_info.hours_worked,
+                shift_info.earned,
+                shift_info.mileage,
+                shift_info.date,
+            ),
+        )
+        new_shift = cursor.fetchone()
+        conn.commit()
+        return {"new_shift": new_shift}
+    except sqlite3.Error:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Internal Server Error")

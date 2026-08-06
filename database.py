@@ -3,9 +3,7 @@ import sqlite3
 
 def get_db():
     # we connect to our database and obtain the cursor to navigate it
-    conn = sqlite3.connect(
-        "courier_tracker.db",
-    )
+    conn = sqlite3.connect("courier_tracker.db")
     cursor = conn.cursor()
     cursor.execute("PRAGMA foreign_keys = ON")
     # try block to yield conn and cursor (operations freeze after yield)
