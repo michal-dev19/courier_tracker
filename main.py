@@ -66,6 +66,13 @@ class CreateShift(BaseModel):
     date: date
 
 
+# class for expense creation
+class CreateExpense(BaseModel):
+    name: str
+    total_spent: int
+    date: date
+
+
 # returns homepage when "/" is accessed
 @app.get("/")
 def index():
@@ -130,12 +137,38 @@ def user_shift(id: int, user=Depends(get_current_user), conn_curs=Depends(get_db
 
 
 # delete specific user shifts
-@app.get("/shifts/{id}")
+@app.delete("/shifts/{id}", status_code=204)
 def delete_shift(id: int, user=Depends(get_current_user), conn_curs=Depends(get_db)):
     conn, cursor = conn_curs
     try:
         cursor.execute("DELETE FROM shifts WHERE id=? AND user_id=?", (id, user[0]))
         conn.commit()
+    except sqlite3.Error:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+# creates a new expense for the user
+@app.post("/expenses", status_code=201)
+def create_expense(
+    expense_info: CreateExpense,
+    user=Depends(get_current_user),
+    conn_curs=Depends(get_db),
+):
+    conn, cursor = conn_curs
+    try:
+        cursor.execute(
+            "INSERT INTO expenses (user_id, expense_name, total_spent, date) VALUES (?, ?, ?, ?)",
+            (
+                user[0],
+                expense_info.name,
+                expense_info.total_spent,
+                str(expense_info.date),
+            ),
+        )
+        id = cursor.lastrowid
+        conn.commit()
+        return {"expense_id": id}
     except sqlite3.Error:
         conn.rollback()
         raise HTTPException(status_code=500, detail="Internal Server Error")
