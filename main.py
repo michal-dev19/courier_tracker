@@ -127,3 +127,15 @@ def user_shift(id: int, user=Depends(get_current_user), conn_curs=Depends(get_db
         return {"shift": shift}
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+# delete specific user shifts
+@app.get("/shifts/{id}")
+def delete_shift(id: int, user=Depends(get_current_user), conn_curs=Depends(get_db)):
+    conn, cursor = conn_curs
+    try:
+        cursor.execute("DELETE FROM shifts WHERE id=? AND user_id=?", (id, user[0]))
+        conn.commit()
+    except sqlite3.Error:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Internal Server Error")
