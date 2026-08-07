@@ -172,3 +172,18 @@ def create_expense(
     except sqlite3.Error:
         conn.rollback()
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+# view all user's expenses
+@app.get("/expenses")
+def all_user_expenses(user=Depends(get_current_user), conn_curs=Depends(get_db)):
+    conn, cursor = conn_curs
+    try:
+        cursor.execute(
+            "SELECT id, expense_name, total_spent, date FROM expenses WHERE user_id=?",
+            (user[0],),
+        )
+        expenses = cursor.fetchall()
+        return {"all_user_expenses": expenses}
+    except sqlite3.Error:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
