@@ -86,12 +86,10 @@ def create_shift(
                 shift_info.hours_worked,
                 shift_info.earned,
                 shift_info.mileage,
-                shift_info.date,
+                str(shift_info.date),
             ),
         )
         id = cursor.lastrowid
-        if id is None:
-            raise HTTPException(status_code=404, detail="Not Found")
         conn.commit()
         return {"shift_id": id}
     except sqlite3.Error:
@@ -109,16 +107,14 @@ def all_user_shifts(user=Depends(get_current_user), conn_curs=Depends(get_db)):
             (user[0],),
         )
         shifts = cursor.fetchall()
-        if shifts is None:
-            raise HTTPException(status_code=404, detail="Not Found")
         return {"all_user_shifts": shifts}
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 # view specific user shift
-@app.post("/shifts/{id}")
-def user_shift(id, user=Depends(get_current_user), conn_curs=Depends(get_db)):
+@app.get("/shifts/{id}")
+def user_shift(id: int, user=Depends(get_current_user), conn_curs=Depends(get_db)):
     conn, cursor = conn_curs
     try:
         cursor.execute(
