@@ -131,7 +131,7 @@ def user_shift(id: int, user=Depends(get_current_user), conn_curs=Depends(get_db
         shift = cursor.fetchone()
         if shift is None:
             raise HTTPException(status_code=404, detail="Not Found")
-        return {"shift": shift}
+        return {"user_shift": shift}
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
@@ -186,4 +186,33 @@ def all_user_expenses(user=Depends(get_current_user), conn_curs=Depends(get_db))
         expenses = cursor.fetchall()
         return {"all_user_expenses": expenses}
     except sqlite3.Error:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+# view specific user expense
+@app.get("/expenses/{id}")
+def user_expense(id: int, user=Depends(get_current_user), conn_curs=Depends(get_db)):
+    conn, cursor = conn_curs
+    try:
+        cursor.execture(
+            "SELECT id, expense_name, total_spent, date FROM expenses WHERE user_id=? AND id=?",
+            (user[0], id),
+        )
+        expense = cursor.fetchone()
+        return {"user_expense": expense}
+    except sqlite3.Error:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+# delete specific user expense
+@app.delete("/expenses/{id}", status_code=204)
+def delete_user_expense(
+    id: int, user=Depends(get_current_user), conn_curs=Depends(get_db)
+):
+    conn, cursor = conn_curs
+    try:
+        cursor.execute("DELETE FROM expenses WHERE id=? AND user_id=?", (id, user[0]))
+        conn.commit()
+    except sqlite3.Error:
+        conn.rollback()
         raise HTTPException(status_code=500, detail="Internal Server Error")
