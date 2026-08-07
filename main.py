@@ -105,7 +105,7 @@ def all_user_shifts(user=Depends(get_current_user), conn_curs=Depends(get_db)):
     conn, cursor = conn_curs
     try:
         cursor.execute(
-            "SELECT hours_worked, earned, mileage, date FROM shifts WHERE user_id=?",
+            "SELECT id, hours_worked, earned, mileage, date FROM shifts WHERE user_id=?",
             (user[0],),
         )
         shifts = cursor.fetchall()
@@ -118,14 +118,12 @@ def all_user_shifts(user=Depends(get_current_user), conn_curs=Depends(get_db)):
 
 # view specific user shift
 @app.post("/shifts/{id}")
-def user_shift(
-    shift_info: CreateShift, user=Depends(get_current_user), conn_curs=Depends(get_db)
-):
+def user_shift(id, user=Depends(get_current_user), conn_curs=Depends(get_db)):
     conn, cursor = conn_curs
     try:
         cursor.execute(
-            "SELECT hours_worked, earned, mileage, date FROM shifts WHERE date=? AND user_id=?",
-            (shift_info.date, user[0]),
+            "SELECT hours_worked, earned, mileage, date FROM shifts WHERE id=? AND user_id=?",
+            (id, user[0]),
         )
         shift = cursor.fetchone()
         if shift is None:
