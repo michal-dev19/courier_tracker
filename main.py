@@ -194,7 +194,7 @@ def all_user_expenses(user=Depends(get_current_user), conn_curs=Depends(get_db))
 def user_expense(id: int, user=Depends(get_current_user), conn_curs=Depends(get_db)):
     conn, cursor = conn_curs
     try:
-        cursor.execture(
+        cursor.execute(
             "SELECT id, expense_name, total_spent, date FROM expenses WHERE user_id=? AND id=?",
             (user[0], id),
         )
