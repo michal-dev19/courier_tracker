@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from database import get_db
-from auth import get_current_user
+from auth import get_current_user, router as auth_router
 from contextlib import asynccontextmanager
 from datetime import date
 import sqlite3
@@ -52,6 +52,10 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+
+# include router into main app
+app.include_router(auth_router)
 
 
 # mounts StaticFiles under /static/ URL for app
