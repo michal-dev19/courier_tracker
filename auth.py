@@ -20,6 +20,7 @@ ALGORITHM = "HS256"
 
 # class to receive register/login requests
 class CreateUser(BaseModel):
+    name: str = Field(min_length=2)
     email: EmailStr
     password: str = Field(min_length=8)
 
@@ -66,8 +67,8 @@ def register_user(user_info: CreateUser, conn_curs=Depends(get_db)):
     conn, cursor = conn_curs
     try:
         cursor.execute(
-            "INSERT INTO users (email, password) VALUES (?, ?)",
-            (user_info.email, hash_password(user_info.password)),
+            "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+            (user_info.name, user_info.email, hash_password(user_info.password)),
         )
         new_id = cursor.lastrowid
         conn.commit()
